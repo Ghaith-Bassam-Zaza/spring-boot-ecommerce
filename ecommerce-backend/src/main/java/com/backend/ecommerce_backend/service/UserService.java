@@ -9,9 +9,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    private LocalUserRepo localUserRepo;
-    public UserService(LocalUserRepo localUserRepo) {
+    private final LocalUserRepo localUserRepo;
+    private final EncryptionService encryptionService;
+
+    @Autowired
+    public UserService(LocalUserRepo localUserRepo,EncryptionService encryptionService) {
         this.localUserRepo = localUserRepo;
+        this.encryptionService = encryptionService;
     }
 
     public LocalUser registerUser(RegistrationBody user) throws UserAlreadyExistsException {
@@ -24,8 +28,7 @@ public class UserService {
         localUser.setEmail(user.getEmail());
         localUser.setFirstName(user.getFirstName());
         localUser.setLastName(user.getLastName());
-        //TODO: encrypt password
-        localUser.setPassword(user.getPassword());
+        localUser.setPassword(encryptionService.encryptPassword(user.getPassword()));
         //System.out.println("recieved now saving:" + localUser.getEmail() + " , " + user.getFirstName() + " " + localUser.getLastName() + " " + localUser.getPassword() + " " + localUser.getUsername());
         return localUserRepo.save(localUser);
 
