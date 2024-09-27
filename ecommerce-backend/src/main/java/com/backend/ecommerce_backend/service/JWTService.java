@@ -24,6 +24,8 @@ public class JWTService {
     private Algorithm algorithm;
 
     private static final String USERNAME_key = "USERNAME";
+    private static final String EMAIL_key = "EMAIL";
+
     @PostConstruct
     public void PostConstruct() {
         algorithm = Algorithm.HMAC256(algorithmKey);
@@ -31,6 +33,13 @@ public class JWTService {
 
     public String generateToken(LocalUser user) {
         return JWT.create().withClaim(USERNAME_key,user.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * expiryInSeconds)))
+                .withIssuer(issuer)
+                .sign(algorithm);
+    }
+
+    public String generateVerificationToken(LocalUser user) {
+        return JWT.create().withClaim(EMAIL_key,user.getEmail())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * expiryInSeconds)))
                 .withIssuer(issuer)
                 .sign(algorithm);

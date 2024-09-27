@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 public class OrderService {
-    private WebOrderRepo webOrderRepo;
+    private final WebOrderRepo webOrderRepo;
 
     public OrderService(WebOrderRepo webOrderRepo) {
         this.webOrderRepo = webOrderRepo;
