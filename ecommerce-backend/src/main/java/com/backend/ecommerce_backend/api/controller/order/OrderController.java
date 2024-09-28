@@ -15,9 +15,20 @@ import java.util.List;
 public class OrderController {
     OrderService orderService;
 
+    /**
+     * Constructor.
+     *
+     * @param orderService injected by spring boot
+     */
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
+    /**
+     * shows the orders of the logged-in user.
+     *
+     * @param user injected by spring boot from the received token
+     * @return user orders.
+     */
     @GetMapping
     public List<WebOrder> getOrders(@AuthenticationPrincipal LocalUser user) {
         return orderService.getOrders(user);

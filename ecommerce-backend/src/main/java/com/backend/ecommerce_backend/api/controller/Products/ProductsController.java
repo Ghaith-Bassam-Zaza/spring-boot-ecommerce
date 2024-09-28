@@ -12,10 +12,20 @@ import java.util.List;
 @RequestMapping("/product")
 public class ProductsController {
     ProductService productService;
-
+    /**
+     * Constructor.
+     *
+     * @param productService injected by spring boot
+     */
     public ProductsController(ProductService productService) {
         this.productService = productService;
     }
+
+    /**
+     * shows the available products.
+     *
+     * @return all products.
+     */
     @RequestMapping
     public List<Product> getProducts() {
         return productService.getProducts();
