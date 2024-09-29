@@ -51,4 +51,27 @@ public class RegistrationBody {
         return lastName;
     }
 
+
+    // for testing only
+
+
+    public void setUsername(@NotBlank @NotNull @Size(min = 3, max = 50) String username) {
+        this.username = username;
+    }
+
+    public void setPassword(@NotBlank @NotNull @Size(min = 8, max = 50) @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$") String password) {
+        this.password = password;
+    }
+
+    public void setEmail(@Email @NotBlank @NotNull @Size(min = 8, max = 255) String email) {
+        this.email = email;
+    }
+
+    public void setFirstName(@NotBlank @NotNull @Size(min = 8, max = 55) String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(@NotBlank @NotNull @Size(min = 8, max = 55) String lastName) {
+        this.lastName = lastName;
+    }
 }
