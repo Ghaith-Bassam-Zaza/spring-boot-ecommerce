@@ -18,4 +18,15 @@ public class LoginBody {
     public String getPassword() {
         return password;
     }
+
+    // for testing only
+
+
+    public void setUsername(@NotNull @NotBlank String username) {
+        this.username = username;
+    }
+
+    public void setPassword(@NotNull @NotBlank String password) {
+        this.password = password;
+    }
 }
