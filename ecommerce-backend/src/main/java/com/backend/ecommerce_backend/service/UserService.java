@@ -47,8 +47,9 @@ public class UserService {
         localUser.setPassword(encryptionService.encryptPassword(user.getPassword()));
         VerificationToken verificationToken = createVerificationToken(localUser);
         emailService.sendVerificationMail(verificationToken);
+        localUser = localUserRepo.save(localUser);
         verificationTokenRepo.save(verificationToken);
-        return localUserRepo.save(localUser);
+        return localUser;
 
     }
 

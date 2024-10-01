@@ -13,21 +13,17 @@ import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.sql.init.SqlDataSourceScriptDatabaseInitializer;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 
 @SpringBootTest
+@ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class UserServiceTest {
-
-    @MockBean
-    private SqlDataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer;
 
 
     @RegisterExtension
@@ -71,10 +67,10 @@ public class UserServiceTest {
         loginBody.setUsername("UserA");
         loginBody.setPassword("UserA-badPassword");
         Assertions.assertNull(userService.loginUser(loginBody),"Password should be incorrect!");
-        loginBody.setPassword("Password@A123");
+        loginBody.setPassword("password@A123");
         Assertions.assertNotNull(userService.loginUser(loginBody),"User should login successfully!");
         loginBody.setUsername("UserB");
-        loginBody.setPassword("Password@B123");
+        loginBody.setPassword("password@B123");
         try{
             userService.loginUser(loginBody);
             Assertions.fail("User should not have email verified!");
