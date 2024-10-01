@@ -5,6 +5,8 @@ import com.backend.ecommerce_backend.api.exceptions.UserAlreadyExistsException;
 import com.backend.ecommerce_backend.api.exceptions.UserNotVerifiedException;
 import com.backend.ecommerce_backend.api.model.LoginBody;
 import com.backend.ecommerce_backend.api.model.RegistrationBody;
+import com.backend.ecommerce_backend.model.VerificationToken;
+import com.backend.ecommerce_backend.model.dao.VerificationTokenRepo;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
@@ -19,10 +21,10 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.List;
+
 
 @SpringBootTest
-@ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class UserServiceTest {
 
 
@@ -33,7 +35,8 @@ public class UserServiceTest {
 
     @Autowired
     private UserService userService;
-
+    @Autowired
+    private VerificationTokenRepo verificationTokenRepo;
 
     @Test
     @Transactional
@@ -86,6 +89,23 @@ public class UserServiceTest {
             Assertions.assertFalse(e.isNewEmailSent(),"email verification should not be resent!");
             Assertions.assertEquals(1,greenMailExtension.getReceivedMessages().length);
 
+        }
+    }
+    @Test
+    @Transactional
+    public void testVerifyUser() throws UserNotVerifiedException, EmailFailureException {
+        Assertions.assertFalse(userService.verifyUser("badToken"),"Token should be invalid!");
+        LoginBody loginBody = new LoginBody();
+        loginBody.setUsername("UserB");
+        loginBody.setPassword("password@B123");
+        try{
+            userService.loginUser(loginBody);
+            Assertions.fail("User should not have email verified!");
+        }catch (UserNotVerifiedException e){
+            List<VerificationToken> tokens =verificationTokenRepo.findByLocalUser_IdOrderByIdDesc(2L);
+            String token = tokens.get(0).getToken();
+            Assertions.assertTrue(userService.verifyUser(token),"Token should be valid!");
+            Assertions.assertNotNull(loginBody, "user should now be verified!");
         }
     }
 }
