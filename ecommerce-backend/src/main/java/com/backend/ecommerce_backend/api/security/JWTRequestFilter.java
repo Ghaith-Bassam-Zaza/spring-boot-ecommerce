@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
@@ -66,11 +67,14 @@ public class JWTRequestFilter extends OncePerRequestFilter {
                 // If the user is found, set up the authentication token
                 if (opUser.isPresent()) {
                     LocalUser localUser = opUser.get();
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(localUser, null, new ArrayList<>());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    if(localUser.getEmailVerified()){
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(localUser, null, new ArrayList<>());
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    // Set the authentication in the security context
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                        // Set the authentication in the security context
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+
                 }
             } catch (JWTDecodeException ignored) {
                 // In case of JWT decode exceptions do nothing (invalid token)
