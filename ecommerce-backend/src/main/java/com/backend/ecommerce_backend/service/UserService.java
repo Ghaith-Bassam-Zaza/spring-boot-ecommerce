@@ -1,9 +1,11 @@
 package com.backend.ecommerce_backend.service;
 
 import com.backend.ecommerce_backend.api.exceptions.EmailFailureException;
+import com.backend.ecommerce_backend.api.exceptions.EmailNotFoundException;
 import com.backend.ecommerce_backend.api.exceptions.UserAlreadyExistsException;
 import com.backend.ecommerce_backend.api.exceptions.UserNotVerifiedException;
 import com.backend.ecommerce_backend.api.model.LoginBody;
+import com.backend.ecommerce_backend.api.model.PasswordResetBody;
 import com.backend.ecommerce_backend.api.model.RegistrationBody;
 import com.backend.ecommerce_backend.model.LocalUser;
 import com.backend.ecommerce_backend.model.VerificationToken;
@@ -101,4 +103,26 @@ public class UserService {
         return false;
     }
 
+    public void forgotPassword(String email) throws EmailNotFoundException, EmailFailureException {
+
+        Optional<LocalUser> opUser = localUserRepo.findByEmailIgnoreCase(email);
+        if(opUser.isPresent()){
+            LocalUser user = opUser.get();
+            String token = jwtService.generatePasswordRestToken(user);
+            emailService.sendPasswordVerificationMail(user,token);
+
+        }else throw new EmailNotFoundException();
+
+
+    }
+    public void resetPassword(PasswordResetBody body) {
+        String email = jwtService.getResetPasswordEmail(body.getToken());
+        Optional<LocalUser> opUser = localUserRepo.findByEmailIgnoreCase(email);
+        if(opUser.isPresent()){
+            LocalUser user = opUser.get();
+            user.setPassword(encryptionService.encryptPassword(body.getPassword()));
+            localUserRepo.save(user);
+        }
+
+    }
 }

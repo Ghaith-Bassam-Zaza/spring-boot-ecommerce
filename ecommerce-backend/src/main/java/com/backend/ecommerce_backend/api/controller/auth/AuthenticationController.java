@@ -2,10 +2,12 @@ package com.backend.ecommerce_backend.api.controller.auth;
 
 
 import com.backend.ecommerce_backend.api.exceptions.EmailFailureException;
+import com.backend.ecommerce_backend.api.exceptions.EmailNotFoundException;
 import com.backend.ecommerce_backend.api.exceptions.UserAlreadyExistsException;
 import com.backend.ecommerce_backend.api.exceptions.UserNotVerifiedException;
 import com.backend.ecommerce_backend.api.model.LoginBody;
 import com.backend.ecommerce_backend.api.model.LoginResponse;
+import com.backend.ecommerce_backend.api.model.PasswordResetBody;
 import com.backend.ecommerce_backend.api.model.RegistrationBody;
 import com.backend.ecommerce_backend.model.LocalUser;
 import com.backend.ecommerce_backend.service.UserService;
@@ -99,5 +101,23 @@ public class AuthenticationController {
         }else{
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+    }
+
+    @PostMapping("/forgot")
+    public ResponseEntity forgotPassword(@RequestParam String email) {
+        try {
+            userService.forgotPassword(email);
+            return ResponseEntity.ok().build();
+        } catch (EmailNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (EmailFailureException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @PostMapping("/reset")
+    public ResponseEntity resetPassword(@Valid @RequestBody PasswordResetBody body) {
+        userService.resetPassword(body);
+        return ResponseEntity.ok().build();
+
     }
 }

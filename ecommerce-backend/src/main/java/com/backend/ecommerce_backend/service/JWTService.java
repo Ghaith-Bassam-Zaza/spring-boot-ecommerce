@@ -25,7 +25,8 @@ public class JWTService {
     private Algorithm algorithm;
 
     private static final String USERNAME_key = "USERNAME";
-    private static final String EMAIL_key = "EMAIL";
+    private static final String VERIFICATION_EMAIL_key = "VERIFICATION_EMAIL";
+    private static final String RESET_PASSWORD_EMAIL_key = "RESET_PASSWORD_EMAIL";
 
     @PostConstruct
     public void PostConstruct() {
@@ -40,14 +41,29 @@ public class JWTService {
     }
 
     public String generateVerificationToken(LocalUser user) {
-        return JWT.create().withClaim(EMAIL_key,user.getEmail())
+        return JWT.create().withClaim(VERIFICATION_EMAIL_key,user.getEmail())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * expiryInSeconds)))
                 .withIssuer(issuer)
                 .sign(algorithm);
     }
 
+    public String generatePasswordRestToken(LocalUser user) {
+        return JWT.create().withClaim(RESET_PASSWORD_EMAIL_key,user.getEmail())
+                .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * 30 * 60)))
+                .withIssuer(issuer)
+                .sign(algorithm);
+    }
+
+    public String getResetPasswordEmail(String token) {
+        DecodedJWT jwt = JWT.require(algorithm).withIssuer(issuer).build().verify(token);
+        return jwt.getClaim(RESET_PASSWORD_EMAIL_key).asString();
+    }
+
+
     public String getUsernameFromToken(String token) throws JWTDecodeException {
         DecodedJWT jwt = JWT.require(algorithm).withIssuer(issuer).build().verify(token);
         return jwt.getClaim(USERNAME_key).asString();
     }
+
+
 }
