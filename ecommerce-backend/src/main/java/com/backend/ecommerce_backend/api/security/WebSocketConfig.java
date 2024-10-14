@@ -23,9 +23,10 @@ import org.springframework.security.messaging.access.intercept.MessageMatcherDel
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final ApplicationContext context;
-
-    public WebSocketConfig(ApplicationContext context) {
+    private final JWTRequestFilter jwtRequestFilter;
+    public WebSocketConfig(ApplicationContext context, JWTRequestFilter jwtRequestFilter) {
         this.context = context;
+        this.jwtRequestFilter = jwtRequestFilter;
     }
 
     @Override
@@ -59,6 +60,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         AuthorizationEventPublisher publisher = new SpringAuthorizationEventPublisher(context);
         authInterceptor.setAuthorizationEventPublisher(publisher);
 
-        registration.interceptors(authInterceptor);
+        registration.interceptors(jwtRequestFilter,authInterceptor);
     }
 }

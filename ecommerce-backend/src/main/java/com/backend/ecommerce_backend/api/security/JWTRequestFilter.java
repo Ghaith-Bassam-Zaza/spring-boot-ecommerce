@@ -9,6 +9,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
@@ -19,10 +22,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class JWTRequestFilter extends OncePerRequestFilter {
+public class JWTRequestFilter extends OncePerRequestFilter implements ChannelInterceptor{
 
     private JWTService jwtService;
     private LocalUserRepo localUserRepo;
@@ -49,14 +54,25 @@ public class JWTRequestFilter extends OncePerRequestFilter {
      * @throws IOException if an I/O error occurs during the filtering process
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         // Retrieve the Authorization header from the request
         String tokenHeader = request.getHeader("Authorization");
+        UsernamePasswordAuthenticationToken authentication = checkToken(tokenHeader);
+        if (authentication != null) {
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        }
 
+
+        // Continue the filter chain
+        filterChain.doFilter(request, response);
+    }
+
+    private UsernamePasswordAuthenticationToken checkToken(String token) {
         // Check if the Authorization header is present and starts with "Bearer "
-        if (tokenHeader != null && tokenHeader.startsWith("Bearer ")) {
+        if (token != null && token.startsWith("Bearer ")) {
             // Extract the token from the header
-            String token = tokenHeader.substring(7);
+            token = token.substring(7);
             try {
                 // Get the username from the token using the JWT service
                 String username = jwtService.getUsernameFromToken(token);
@@ -68,11 +84,11 @@ public class JWTRequestFilter extends OncePerRequestFilter {
                 if (opUser.isPresent()) {
                     LocalUser localUser = opUser.get();
                     if(localUser.getEmailVerified()){
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(localUser, null, new ArrayList<>());
-                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(localUser, null, new ArrayList<>());
                         // Set the authentication in the security context
                         SecurityContextHolder.getContext().setAuthentication(authToken);
+                        return authToken;
                     }
 
                 }
@@ -80,9 +96,27 @@ public class JWTRequestFilter extends OncePerRequestFilter {
                 // In case of JWT decode exceptions do nothing (invalid token)
             }
         }
-
-        // Continue the filter chain
-        filterChain.doFilter(request, response);
+        SecurityContextHolder.getContext().setAuthentication(null);
+        return null;
     }
 
+
+    // METHODS FOR WEBSOCKET
+
+
+
+    @Override
+    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        Map nativeHeaders = (Map) message.getHeaders().get("nativeHeaders");
+        //TODO: Limit to CONNECT messages
+        if (nativeHeaders != null) {
+            List authTokenList = (List) nativeHeaders.get("Authorization");
+            if (authTokenList != null) {
+                String tokenHeader = (String) authTokenList.get(0);
+                checkToken(tokenHeader);
+            }
+        }
+        return message;
+
+    }
 }
