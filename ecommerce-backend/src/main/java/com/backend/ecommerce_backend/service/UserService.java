@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.Permission;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -124,5 +125,8 @@ public class UserService {
             localUserRepo.save(user);
         }
 
+    }
+    public boolean userHasPermissionToUser(LocalUser user, Long id) {
+        return user.getId() == id;
     }
 }
