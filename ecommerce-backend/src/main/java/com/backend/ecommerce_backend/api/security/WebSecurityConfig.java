@@ -42,7 +42,8 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
                 // Allow unauthenticated access to specific endpoints
                 .requestMatchers("/product", "/auth/login", "/auth/register",
-                        "/auth/verify", "/auth/forgot", "/auth/reset", "/error").permitAll()
+                        "/auth/verify", "/auth/forgot", "/auth/reset", "/error",
+                        "websocket","websocket/**").permitAll()
                 // Require authentication for all other requests
                 .anyRequest().authenticated());
 
